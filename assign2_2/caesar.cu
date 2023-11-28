@@ -45,7 +45,7 @@ __global__ void encryptKernel(char *deviceDataIn, char *deviceDataOut, int key_l
     int idx = blockIdx.x * blockDim.x + threadIdx.x;
     int key_idx = threadIdx.x % key_length;
 
-    if (idx < blockDim.x * gridDim.x)
+    if (idx < n)
     {
         deviceDataOut[idx] = (deviceDataIn[idx] + key[key_idx]) % 256;
     }
@@ -58,8 +58,9 @@ __global__ void decryptKernel(char *deviceDataIn, char *deviceDataOut, int key_l
     int idx = blockIdx.x * blockDim.x + threadIdx.x;
     int key_idx = threadIdx.x % key_length;
 
-    if (idx < blockDim.x * gridDim.x)
+    if (idx < n)
     {
+
         deviceDataOut[idx] = (deviceDataIn[idx] - key[key_idx] + 256) % 256;
     }
 }
@@ -141,7 +142,7 @@ int EncryptCuda(int n, char *data_in, char *data_out, int key_length, int *key)
 
     // execute kernel
     kernelTime1.start();
-    encryptKernel<<<n / threadBlockSize, threadBlockSize>>>(deviceDataIn, deviceDataOut, key_length, key);
+    encryptKernel<<<n / threadBlockSize, threadBlockSize>>>(deviceDataIn, deviceDataOut, key_length, key, n);
     cudaDeviceSynchronize();
     kernelTime1.stop();
 
@@ -196,7 +197,7 @@ int DecryptCuda(int n, char *data_in, char *data_out, int key_length, int *key)
 
     // execute kernel
     kernelTime1.start();
-    decryptKernel<<<n / threadBlockSize, threadBlockSize>>>(deviceDataIn, deviceDataOut, key_length, key);
+    decryptKernel<<<n / threadBlockSize, threadBlockSize>>>(deviceDataIn, deviceDataOut, key_length, key, n);
     cudaDeviceSynchronize();
     kernelTime1.stop();
 
