@@ -40,7 +40,7 @@ static void checkCudaCall(cudaError_t result)
 
 /* Change this kernel to properly encrypt the given data. The result should be
  * written to the given out data. */
-__global__ void encryptKernel(char *deviceDataIn, char *deviceDataOut, int key_length, int *key)
+__global__ void encryptKernel(char *deviceDataIn, char *deviceDataOut, int key_length, int *key, int n)
 {
     int idx = blockIdx.x * blockDim.x + threadIdx.x;
     int key_idx = threadIdx.x % key_length;
@@ -53,7 +53,7 @@ __global__ void encryptKernel(char *deviceDataIn, char *deviceDataOut, int key_l
 
 /* Change this kernel to properly decrypt the given data. The result should be
  * written to the given out data. */
-__global__ void decryptKernel(char *deviceDataIn, char *deviceDataOut, int key_length, int *key)
+__global__ void decryptKernel(char *deviceDataIn, char *deviceDataOut, int key_length, int *key, int n)
 {
     int idx = blockIdx.x * blockDim.x + threadIdx.x;
     int key_idx = threadIdx.x % key_length;
