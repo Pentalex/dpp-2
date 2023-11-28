@@ -38,40 +38,29 @@ static void checkCudaCall(cudaError_t result)
     }
 }
 
-__device__ bool isAlphabetical(char c)
-{
-    return (c >= 'A' && c <= 'Z') || (c >= 'a' && c <= 'z');
-}
+const int BLOCK_SIZE = 256;
 
-/* Change this kernel to properly encrypt the given data. The result should be
- * written to the given out data. */
 __global__ void encryptKernel(char *deviceDataIn, char *deviceDataOut, int key, int n)
 {
     int tid = blockIdx.x * blockDim.x + threadIdx.x;
-    int limit = n - 10; // For example, process up to the last 10 characters
+    int blockId = tid / BLOCK_SIZE;
 
-    if (tid < limit)
+    for (int i = blockId * BLOCK_SIZE; i < min((blockId + 1) * BLOCK_SIZE, n); ++i)
     {
-        char c = deviceDataIn[tid];
-
-        // Encrypt every character
-        deviceDataOut[tid] = (c + key) % 256;
+        char c = deviceDataIn[i];
+        deviceDataOut[i] = (c + key) % 256;
     }
 }
 
-/* Change this kernel to properly decrypt the given data. The result should be
- * written to the given out data. */
 __global__ void decryptKernel(char *deviceDataIn, char *deviceDataOut, int key, int n)
 {
     int tid = blockIdx.x * blockDim.x + threadIdx.x;
-    int limit = n - 10; // For example, process up to the last 10 characters
+    int blockId = tid / BLOCK_SIZE;
 
-    if (tid < limit)
+    for (int i = blockId * BLOCK_SIZE; i < min((blockId + 1) * BLOCK_SIZE, n); ++i)
     {
-        char c = deviceDataIn[tid];
-
-        // Decrypt every character
-        deviceDataOut[tid] = (c - key + 256) % 256;
+        char c = deviceDataIn[i];
+        deviceDataOut[i] = (c - key + 256) % 256;
     }
 }
 
