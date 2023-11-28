@@ -40,25 +40,39 @@ static void checkCudaCall(cudaError_t result)
 
 /* Change this kernel to properly encrypt the given data. The result should be
  * written to the given out data. */
-__global__ void encryptKernel(char *deviceDataIn, char *deviceDataOut, int key, int dataSize)
+__global__ void encryptKernel(char *deviceDataIn, char *deviceDataOut, int key)
 {
     int tid = blockIdx.x * blockDim.x + threadIdx.x;
-    if (tid < dataSize)
+    char c = deviceDataIn[tid];
+
+    // Encrypt only alphabetical characters
+    if (isalpha(c))
     {
-        char c = deviceDataIn[tid];
-        deviceDataOut[tid] = (c + key) % 256; // 256 is the ASCII range
+        char base = isupper(c) ? 'A' : 'a';
+        deviceDataOut[tid] = ((c - base + key) % 26 + 26) % 26 + base;
+    }
+    else
+    {
+        deviceDataOut[tid] = c;
     }
 }
 
 /* Change this kernel to properly decrypt the given data. The result should be
  * written to the given out data. */
-__global__ void decryptKernel(char *deviceDataIn, char *deviceDataOut, int key, int dataSize)
+__global__ void decryptKernel(char *deviceDataIn, char *deviceDataOut, int key)
 {
     int tid = blockIdx.x * blockDim.x + threadIdx.x;
-    if (tid < dataSize)
+    char c = deviceDataIn[tid];
+
+    // Decrypt only alphabetical characters
+    if (isalpha(c))
     {
-        char c = deviceDataIn[tid];
-        deviceDataOut[tid] = (c - key + 256) % 256; // 256 is the ASCII range
+        char base = isupper(c) ? 'A' : 'a';
+        deviceDataOut[tid] = ((c - base - key) % 26 + 26) % 26 + base;
+    }
+    else
+    {
+        deviceDataOut[tid] = c;
     }
 }
 
@@ -139,7 +153,7 @@ int EncryptCuda(int n, char *data_in, char *data_out, int key_length, int *key)
 
     // execute kernel
     kernelTime1.start();
-    encryptKernel<<<n / threadBlockSize, threadBlockSize>>>(deviceDataIn, deviceDataOut, *key, n);
+    encryptKernel<<<n / threadBlockSize, threadBlockSize>>>(deviceDataIn, deviceDataOut, *key);
     cudaDeviceSynchronize();
     kernelTime1.stop();
 
@@ -194,7 +208,7 @@ int DecryptCuda(int n, char *data_in, char *data_out, int key_length, int *key)
 
     // execute kernel
     kernelTime1.start();
-    decryptKernel<<<n / threadBlockSize, threadBlockSize>>>(deviceDataIn, deviceDataOut, *key, n);
+    decryptKernel<<<n / threadBlockSize, threadBlockSize>>>(deviceDataIn, deviceDataOut, *key);
     cudaDeviceSynchronize();
     kernelTime1.stop();
 
