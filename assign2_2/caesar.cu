@@ -220,7 +220,7 @@ int DecryptCuda(int n, char *data_in, char *data_out, int key_length, int *key)
 
     // copy the original vectors to the GPU
     memoryTime.start();
-    checkCudaCall(cudaMemcpy(deviceDataIn, data_in, n * sizeof(char), cudaMemcpyHostToDevice));
+    checkCudaCall(cudaMemcpy(deviceDataIn, data_in, (n + 1) * sizeof(char), cudaMemcpyHostToDevice));
     memoryTime.stop();
 
     // execute kernel
@@ -234,7 +234,7 @@ int DecryptCuda(int n, char *data_in, char *data_out, int key_length, int *key)
 
     // copy result back
     memoryTime.start();
-    checkCudaCall(cudaMemcpy(data_out, deviceDataOut, n * sizeof(char), cudaMemcpyDeviceToHost));
+    checkCudaCall(cudaMemcpy(data_out, deviceDataOut, (n + 1) * sizeof(char), cudaMemcpyDeviceToHost));
     memoryTime.stop();
 
     checkCudaCall(cudaFree(deviceDataIn));
