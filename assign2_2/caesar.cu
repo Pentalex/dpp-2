@@ -38,6 +38,11 @@ static void checkCudaCall(cudaError_t result)
     }
 }
 
+__device__ bool isAlphabetical(char c)
+{
+    return (c >= 'A' && c <= 'Z') || (c >= 'a' && c <= 'z');
+}
+
 /* Change this kernel to properly encrypt the given data. The result should be
  * written to the given out data. */
 __global__ void encryptKernel(char *deviceDataIn, char *deviceDataOut, int key)
@@ -46,7 +51,7 @@ __global__ void encryptKernel(char *deviceDataIn, char *deviceDataOut, int key)
     char c = deviceDataIn[tid];
 
     // Encrypt only alphabetical characters
-    if (isalpha(c))
+    if (isAlphabetical(c))
     {
         char base = isupper(c) ? 'A' : 'a';
         deviceDataOut[tid] = ((c - base + key) % 26 + 26) % 26 + base;
@@ -65,7 +70,7 @@ __global__ void decryptKernel(char *deviceDataIn, char *deviceDataOut, int key)
     char c = deviceDataIn[tid];
 
     // Decrypt only alphabetical characters
-    if (isalpha(c))
+    if (isAlphabetical(c))
     {
         char base = isupper(c) ? 'A' : 'a';
         deviceDataOut[tid] = ((c - base - key) % 26 + 26) % 26 + base;
