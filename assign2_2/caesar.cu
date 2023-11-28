@@ -45,20 +45,16 @@ __device__ bool isAlphabetical(char c)
 
 /* Change this kernel to properly encrypt the given data. The result should be
  * written to the given out data. */
-__global__ void encryptKernel(char *deviceDataIn, char *deviceDataOut, int key, int n)
+__global__ void encryptKernel(char *deviceDataIn, char *deviceDataOut, int key)
 {
     int tid = blockIdx.x * blockDim.x + threadIdx.x;
-    char c = deviceDataIn[tid];
 
-    // Encrypt only alphabetical characters
-    if (isAlphabetical(c))
+    if (tid < n)
     {
-        char base = (c >= 'A' && c <= 'Z') ? 'A' : 'a';
-        deviceDataOut[tid] = ((c - base + key) % 26 + 26) % 26 + base;
-    }
-    else
-    {
-        deviceDataOut[tid] = c;
+        char c = deviceDataIn[tid];
+
+        // Encrypt every character
+        deviceDataOut[tid] = (c + key) % 256;
     }
 
     // Null-terminate the string at the end
@@ -70,26 +66,22 @@ __global__ void encryptKernel(char *deviceDataIn, char *deviceDataOut, int key, 
 
 /* Change this kernel to properly decrypt the given data. The result should be
  * written to the given out data. */
-__global__ void decryptKernel(char *deviceDataIn, char *deviceDataOut, int key, int n)
+__global__ void decryptKernel(char *deviceDataIn, char *deviceDataOut, int key)
 {
     int tid = blockIdx.x * blockDim.x + threadIdx.x;
-    char c = deviceDataIn[tid];
 
-    // Decrypt only alphabetical characters
-    if (isAlphabetical(c))
+    if (tid < n)
     {
-        char base = (c >= 'A' && c <= 'Z') ? 'A' : 'a';
-        deviceDataOut[tid] = ((c - base - key) % 26 + 26) % 26 + base;
-    }
-    else
-    {
-        deviceDataOut[tid] = c;
+        char c = deviceDataIn[tid];
+
+        // Decrypt every character
+        deviceDataOut[tid] = (c - key + 256) % 256;
     }
 
     // Null-terminate the string at the end
     if (tid == n - 1)
     {
-        deviceDataOut[tid + 1] = '\0';
+        deviceDataOut[tid] = '\0';
     }
 }
 
@@ -170,7 +162,7 @@ int EncryptCuda(int n, char *data_in, char *data_out, int key_length, int *key)
 
     // execute kernel
     kernelTime1.start();
-    encryptKernel<<<n / threadBlockSize, threadBlockSize>>>(deviceDataIn, deviceDataOut, *key, n);
+    encryptKernel<<<n / threadBlockSize, threadBlockSize>>>(deviceDataIn, deviceDataOut, *key);
     cudaDeviceSynchronize();
     kernelTime1.stop();
 
@@ -220,12 +212,12 @@ int DecryptCuda(int n, char *data_in, char *data_out, int key_length, int *key)
 
     // copy the original vectors to the GPU
     memoryTime.start();
-    checkCudaCall(cudaMemcpy(deviceDataIn, data_in, (n + 1) * sizeof(char), cudaMemcpyHostToDevice));
+    checkCudaCall(cudaMemcpy(deviceDataIn, data_in, n * sizeof(char), cudaMemcpyHostToDevice));
     memoryTime.stop();
 
     // execute kernel
     kernelTime1.start();
-    decryptKernel<<<n / threadBlockSize, threadBlockSize>>>(deviceDataIn, deviceDataOut, *key, n);
+    decryptKernel<<<n / threadBlockSize, threadBlockSize>>>(deviceDataIn, deviceDataOut, *key);
     cudaDeviceSynchronize();
     kernelTime1.stop();
 
@@ -234,7 +226,7 @@ int DecryptCuda(int n, char *data_in, char *data_out, int key_length, int *key)
 
     // copy result back
     memoryTime.start();
-    checkCudaCall(cudaMemcpy(data_out, deviceDataOut, (n + 1) * sizeof(char), cudaMemcpyDeviceToHost));
+    checkCudaCall(cudaMemcpy(data_out, deviceDataOut, n * sizeof(char), cudaMemcpyDeviceToHost));
     memoryTime.stop();
 
     checkCudaCall(cudaFree(deviceDataIn));
