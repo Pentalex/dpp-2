@@ -53,7 +53,7 @@ __global__ void encryptKernel(char *deviceDataIn, char *deviceDataOut, int key)
     // Encrypt only alphabetical characters
     if (isAlphabetical(c))
     {
-        char base = isupper(c) ? 'A' : 'a';
+        char base = (c >= 'A' && c <= 'Z') ? 'A' : 'a';
         deviceDataOut[tid] = ((c - base + key) % 26 + 26) % 26 + base;
     }
     else
@@ -72,7 +72,7 @@ __global__ void decryptKernel(char *deviceDataIn, char *deviceDataOut, int key)
     // Decrypt only alphabetical characters
     if (isAlphabetical(c))
     {
-        char base = isupper(c) ? 'A' : 'a';
+        char base = (c >= 'A' && c <= 'Z') ? 'A' : 'a';
         deviceDataOut[tid] = ((c - base - key) % 26 + 26) % 26 + base;
     }
     else
