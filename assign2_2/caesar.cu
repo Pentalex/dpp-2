@@ -42,43 +42,23 @@ __global__ void encryptKernel(char *deviceDataIn, char *deviceDataOut, int key, 
 {
     int idx = blockIdx.x * blockDim.x + threadIdx.x;
 
-    // Check if the thread index is within the data size
+    // Skip encryption for newline characters
     if (idx < dataSize)
     {
         char inputChar = deviceDataIn[idx];
-
-        // Skip encryption for special characters
-        if (inputChar >= 32 && inputChar <= 127)
-        {
-            char encryptedChar = (inputChar + key) % 128; // Ensure it stays within ASCII range
-            deviceDataOut[idx] = encryptedChar;
-        }
-        else
-        {
-            deviceDataOut[idx] = inputChar;
-        }
+        char encryptedChar = (inputChar + key);
+        deviceDataOut[idx] = encryptedChar;
     }
 }
 
 __global__ void decryptKernel(char *deviceDataIn, char *deviceDataOut, int key, int dataSize)
 {
     int idx = blockIdx.x * blockDim.x + threadIdx.x;
-
-    // Check if the thread index is within the data size
     if (idx < dataSize)
     {
         char inputChar = deviceDataIn[idx];
-
-        // Skip decryption for special characters
-        if (inputChar >= 32 && inputChar <= 127)
-        {
-            char decryptedChar = (inputChar - key) % 128; // Ensure it stays within ASCII range
-            deviceDataOut[idx] = decryptedChar;
-        }
-        else
-        {
-            deviceDataOut[idx] = inputChar;
-        }
+        char decryptedChar = (inputChar - key);
+        deviceDataOut[idx] = decryptedChar;
     }
 }
 
