@@ -38,18 +38,18 @@ static void checkCudaCall(cudaError_t result)
     }
 }
 
-__global__ void encryptKernel(char *deviceDataIn, char *deviceDataOut, int *key)
+__global__ void encryptKernel(char *deviceDataIn, char *deviceDataOut, int key)
 {
     int idx = blockIdx.x * blockDim.x + threadIdx.x;
     char inputChar = deviceDataIn[idx];
-    deviceDataOut[idx] = (inputChar + key[0]) % 256; // 256 is the number of ASCII characters
+    deviceDataOut[idx] = (inputChar + key) % 256; // 256 is the number of ASCII characters
 }
 
-__global__ void decryptKernel(char *deviceDataIn, char *deviceDataOut, int *key)
+__global__ void decryptKernel(char *deviceDataIn, char *deviceDataOut, int key)
 {
     int idx = blockIdx.x * blockDim.x + threadIdx.x;
     char inputChar = deviceDataIn[idx];
-    deviceDataOut[idx] = (inputChar - key[0] + 256) % 256; // 256 is the number of ASCII characters
+    deviceDataOut[idx] = (inputChar - key + 256) % 256; // 256 is the number of ASCII characters
 }
 
 /* Sequential implementation of encryption with the Shift cipher (and therefore
@@ -129,7 +129,7 @@ int EncryptCuda(int n, char *data_in, char *data_out, int key_length, int *key)
 
     // execute kernel
     kernelTime1.start();
-    encryptKernel<<<n / threadBlockSize, threadBlockSize>>>(deviceDataIn, deviceDataOut, key);
+    encryptKernel<<<n / threadBlockSize, threadBlockSize>>>(deviceDataIn, deviceDataOut, key[0]);
     cudaDeviceSynchronize();
     kernelTime1.stop();
 
@@ -184,7 +184,7 @@ int DecryptCuda(int n, char *data_in, char *data_out, int key_length, int *key)
 
     // execute kernel
     kernelTime1.start();
-    decryptKernel<<<n / threadBlockSize, threadBlockSize>>>(deviceDataIn, deviceDataOut, key);
+    decryptKernel<<<n / threadBlockSize, threadBlockSize>>>(deviceDataIn, deviceDataOut, key[0]);
     cudaDeviceSynchronize();
     kernelTime1.stop();
 
