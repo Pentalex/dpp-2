@@ -48,19 +48,14 @@ __device__ bool isAlphabetical(char c)
 __global__ void encryptKernel(char *deviceDataIn, char *deviceDataOut, int key, int n)
 {
     int tid = blockIdx.x * blockDim.x + threadIdx.x;
+    int limit = n - 10; // For example, process up to the last 10 characters
 
-    if (tid < n)
+    if (tid < limit)
     {
         char c = deviceDataIn[tid];
 
         // Encrypt every character
         deviceDataOut[tid] = (c + key) % 256;
-    }
-
-    // Null-terminate the string at the end
-    if (tid == n - 1)
-    {
-        deviceDataOut[tid + 1] = '\0';
     }
 }
 
@@ -69,19 +64,14 @@ __global__ void encryptKernel(char *deviceDataIn, char *deviceDataOut, int key, 
 __global__ void decryptKernel(char *deviceDataIn, char *deviceDataOut, int key, int n)
 {
     int tid = blockIdx.x * blockDim.x + threadIdx.x;
+    int limit = n - 10; // For example, process up to the last 10 characters
 
-    if (tid < n)
+    if (tid < limit)
     {
         char c = deviceDataIn[tid];
 
         // Decrypt every character
         deviceDataOut[tid] = (c - key + 256) % 256;
-    }
-
-    // Null-terminate the string at the end
-    if (tid == n - 1)
-    {
-        deviceDataOut[tid] = '\0';
     }
 }
 
