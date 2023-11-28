@@ -43,8 +43,11 @@ static void checkCudaCall(cudaError_t result)
 __global__ void encryptKernel(char *deviceDataIn, char *deviceDataOut, int key)
 {
     int tid = blockIdx.x * blockDim.x + threadIdx.x;
-    char c = deviceDataIn[tid];
-    deviceDataOut[tid] = (c + key) % 256; // 256 is the ASCII range
+    if (tid < dataSize)
+    {
+        char c = deviceDataIn[tid];
+        deviceDataOut[tid] = (c + key) % 256; // 256 is the ASCII range
+    }
 }
 
 /* Change this kernel to properly decrypt the given data. The result should be
@@ -52,8 +55,11 @@ __global__ void encryptKernel(char *deviceDataIn, char *deviceDataOut, int key)
 __global__ void decryptKernel(char *deviceDataIn, char *deviceDataOut, int key)
 {
     int tid = blockIdx.x * blockDim.x + threadIdx.x;
-    char c = deviceDataIn[tid];
-    deviceDataOut[tid] = (c - key + 256) % 256; // 256 is the ASCII range
+    if (tid < dataSize)
+    {
+        char c = deviceDataIn[tid];
+        deviceDataOut[tid] = (c - key + 256) % 256; // 256 is the ASCII range
+    }
 }
 
 /* Sequential implementation of encryption with the Shift cipher (and therefore
