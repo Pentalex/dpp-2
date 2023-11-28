@@ -48,7 +48,7 @@ __global__ void encryptKernel(char *deviceDataIn, char *deviceDataOut, int key, 
     for (int i = blockId * BLOCK_SIZE; i < min((blockId + 1) * BLOCK_SIZE, n); ++i)
     {
         char c = deviceDataIn[i];
-        deviceDataOut[i] = (c + key) % 256;
+        deviceDataOut[i] = (c + key);
     }
 }
 
@@ -60,7 +60,7 @@ __global__ void decryptKernel(char *deviceDataIn, char *deviceDataOut, int key, 
     for (int i = blockId * BLOCK_SIZE; i < min((blockId + 1) * BLOCK_SIZE, n); ++i)
     {
         char c = deviceDataIn[i];
-        deviceDataOut[i] = (c - key + 256) % 256;
+        deviceDataOut[i] = (c - key + 256);
     }
 }
 
