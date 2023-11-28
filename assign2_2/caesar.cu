@@ -72,7 +72,7 @@ __global__ void decryptKernel(char *deviceDataIn, char *deviceDataOut, int key, 
         // Skip decryption for special characters
         if (inputChar >= 32 && inputChar <= 127)
         {
-            char decryptedChar = (inputChar - key + 128) % 128; // Ensure it stays within ASCII range
+            char decryptedChar = (inputChar - key) % 128; // Ensure it stays within ASCII range
             deviceDataOut[idx] = decryptedChar;
         }
         else
