@@ -38,18 +38,28 @@ static void checkCudaCall(cudaError_t result)
     }
 }
 
-__global__ void encryptKernel(char *deviceDataIn, char *deviceDataOut, int key)
+__global__ void encryptKernel(char *deviceDataIn, char *deviceDataOut, int key, int dataSize)
 {
     int idx = blockIdx.x * blockDim.x + threadIdx.x;
-    char inputChar = deviceDataIn[idx];
-    deviceDataOut[idx] = (inputChar + key) % 256; // 256 is the number of ASCII characters
+
+    // Skip encryption for newline characters
+    if (idx < dataSize)
+    {
+        char encryptedChar = (inputChar + key) % 256;
+        deviceDataOut[idx] = encryptedChar;
+    }
 }
 
-__global__ void decryptKernel(char *deviceDataIn, char *deviceDataOut, int key)
+__global__ void decryptKernel(char *deviceDataIn, char *deviceDataOut, int key, int dataSize)
 {
     int idx = blockIdx.x * blockDim.x + threadIdx.x;
     char inputChar = deviceDataIn[idx];
-    deviceDataOut[idx] = (inputChar - key + 256) % 256; // 256 is the number of ASCII characters
+    // Skip decryption for newline characters
+    if (idx < dataSize)
+    {
+        char decryptedChar = (inputChar - key + 256) % 256;
+        deviceDataOut[idx] = decryptedChar;
+    }
 }
 
 /* Sequential implementation of encryption with the Shift cipher (and therefore
@@ -129,7 +139,7 @@ int EncryptCuda(int n, char *data_in, char *data_out, int key_length, int *key)
 
     // execute kernel
     kernelTime1.start();
-    encryptKernel<<<n / threadBlockSize, threadBlockSize>>>(deviceDataIn, deviceDataOut, key[0]);
+    encryptKernel<<<n / threadBlockSize, threadBlockSize>>>(deviceDataIn, deviceDataOut, key[0], n);
     cudaDeviceSynchronize();
     kernelTime1.stop();
 
@@ -184,7 +194,7 @@ int DecryptCuda(int n, char *data_in, char *data_out, int key_length, int *key)
 
     // execute kernel
     kernelTime1.start();
-    decryptKernel<<<n / threadBlockSize, threadBlockSize>>>(deviceDataIn, deviceDataOut, key[0]);
+    decryptKernel<<<n / threadBlockSize, threadBlockSize>>>(deviceDataIn, deviceDataOut, key[0], n);
     cudaDeviceSynchronize();
     kernelTime1.stop();
 
