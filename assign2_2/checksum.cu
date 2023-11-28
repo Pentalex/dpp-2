@@ -40,7 +40,7 @@ static void checkCudaCall(cudaError_t result)
 /* Change this kernel to compute a simple, additive checksum of the given data.
  * The result should be written to the given result-integer, which is an
  * integer and NOT an array like deviceDataIn. */
-__global__ void checksumKernel(unsigned int *result, unsigned int *deviceDataIn)
+__global__ void checksumKernel(unsigned int *result, unsigned int *deviceDataIn, int n)
 {
 
     int i = blockIdx.x * blockDim.x + threadIdx.x;
@@ -105,7 +105,7 @@ unsigned int checksumCuda(int n, unsigned int *data_in)
     memoryTime.stop();
 
     kernelTime.start();
-    checksumKernel<<<n / threadBlockSize, threadBlockSize>>>(deviceResult, deviceDataIn);
+    checksumKernel<<<n / threadBlockSize, threadBlockSize>>>(deviceResult, deviceDataIn, n);
     cudaDeviceSynchronize();
     kernelTime.stop();
 
