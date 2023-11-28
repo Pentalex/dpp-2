@@ -46,7 +46,7 @@ __global__ void encryptKernel(char *deviceDataIn, char *deviceDataOut, int key, 
     if (idx < dataSize)
     {
         char inputChar = deviceDataIn[idx];
-        char encryptedChar = (inputChar + key) % 256;
+        char encryptedChar = (inputChar + key);
         deviceDataOut[idx] = encryptedChar;
     }
 }
@@ -57,7 +57,7 @@ __global__ void decryptKernel(char *deviceDataIn, char *deviceDataOut, int key, 
     if (idx < dataSize)
     {
         char inputChar = deviceDataIn[idx];
-        char decryptedChar = (inputChar - key + 256) % 256;
+        char decryptedChar = (inputChar - key);
         deviceDataOut[idx] = decryptedChar;
     }
 }
