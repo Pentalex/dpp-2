@@ -135,7 +135,7 @@ int EncryptCuda(int n, char *data_in, char *data_out, int key_length, int *key)
 
     // execute kernel
     kernelTime1.start();
-    encryptKernel<<<n / threadBlockSize, threadBlockSize>>>(deviceDataIn, deviceDataOut, key);
+    encryptKernel<<<n / threadBlockSize, threadBlockSize>>>(deviceDataIn, deviceDataOut, *key);
     cudaDeviceSynchronize();
     kernelTime1.stop();
 
@@ -190,7 +190,7 @@ int DecryptCuda(int n, char *data_in, char *data_out, int key_length, int *key)
 
     // execute kernel
     kernelTime1.start();
-    decryptKernel<<<n / threadBlockSize, threadBlockSize>>>(deviceDataIn, deviceDataOut, key);
+    decryptKernel<<<n / threadBlockSize, threadBlockSize>>>(deviceDataIn, deviceDataOut, *key);
     cudaDeviceSynchronize();
     kernelTime1.stop();
 
