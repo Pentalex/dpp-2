@@ -38,30 +38,19 @@ static void checkCudaCall(cudaError_t result)
     }
 }
 
-const int BLOCK_SIZE = 256;
-
-__global__ void encryptKernel(char *deviceDataIn, char *deviceDataOut, int key, int n)
+__global__ void encryptKernel(char *deviceDataIn, char *deviceDataOut, int key)
 {
-    int tid = blockIdx.x * blockDim.x + threadIdx.x;
-    int blockId = tid / BLOCK_SIZE;
-
-    for (int i = blockId * BLOCK_SIZE; i < min((blockId + 1) * BLOCK_SIZE, n); ++i)
-    {
-        char c = deviceDataIn[i];
-        deviceDataOut[i] = (c + key);
-    }
+    int idx = blockIdx.x * blockDim.x + threadIdx.x;
+    char inputChar = deviceDataIn[idx];
+    deviceDataOut[idx] = (inputChar + key) % 256; // 256 is the number of ASCII characters
+    cout << key
 }
 
-__global__ void decryptKernel(char *deviceDataIn, char *deviceDataOut, int key, int n)
+__global__ void decryptKernel(char *deviceDataIn, char *deviceDataOut, int key)
 {
-    int tid = blockIdx.x * blockDim.x + threadIdx.x;
-    int blockId = tid / BLOCK_SIZE;
-
-    for (int i = blockId * BLOCK_SIZE; i < min((blockId + 1) * BLOCK_SIZE, n); ++i)
-    {
-        char c = deviceDataIn[i];
-        deviceDataOut[i] = (c - key + 256);
-    }
+    int idx = blockIdx.x * blockDim.x + threadIdx.x;
+    char inputChar = deviceDataIn[idx];
+    deviceDataOut[idx] = (inputChar - key + 256) % 256; // 256 is the number of ASCII characters
 }
 
 /* Sequential implementation of encryption with the Shift cipher (and therefore
