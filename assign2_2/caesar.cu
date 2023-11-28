@@ -45,6 +45,7 @@ __global__ void encryptKernel(char *deviceDataIn, char *deviceDataOut, int key, 
     // Skip encryption for newline characters
     if (idx < dataSize)
     {
+        char inputChar = deviceDataIn[idx];
         char encryptedChar = (inputChar + key) % 256;
         deviceDataOut[idx] = encryptedChar;
     }
@@ -53,10 +54,9 @@ __global__ void encryptKernel(char *deviceDataIn, char *deviceDataOut, int key, 
 __global__ void decryptKernel(char *deviceDataIn, char *deviceDataOut, int key, int dataSize)
 {
     int idx = blockIdx.x * blockDim.x + threadIdx.x;
-    char inputChar = deviceDataIn[idx];
-    // Skip decryption for newline characters
     if (idx < dataSize)
     {
+        char inputChar = deviceDataIn[idx];
         char decryptedChar = (inputChar - key + 256) % 256;
         deviceDataOut[idx] = decryptedChar;
     }
