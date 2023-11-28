@@ -40,7 +40,7 @@ static void checkCudaCall(cudaError_t result)
 
 /* Change this kernel to properly encrypt the given data. The result should be
  * written to the given out data. */
-__global__ void encryptKernel(char *deviceDataIn, char *deviceDataOut)
+__global__ void encryptKernel(char *deviceDataIn, char *deviceDataOut, int key_length, int *key)
 {
     int idx = blockIdx.x * blockDim.x + threadIdx.x;
     int key_idx = threadIdx.x % key_length;
@@ -53,7 +53,7 @@ __global__ void encryptKernel(char *deviceDataIn, char *deviceDataOut)
 
 /* Change this kernel to properly decrypt the given data. The result should be
  * written to the given out data. */
-__global__ void decryptKernel(char *deviceDataIn, char *deviceDataOut)
+__global__ void decryptKernel(char *deviceDataIn, char *deviceDataOut, int key_length, int *key)
 {
     int idx = blockIdx.x * blockDim.x + threadIdx.x;
     int key_idx = threadIdx.x % key_length;
@@ -76,8 +76,7 @@ int EncryptSeq(int n, char *data_in, char *data_out, int key_length, int *key)
     sequentialTime.start();
     for (i = 0; i < n; i++)
     {
-
-        // YOUR CODE HERE
+        data_out[i] = (data_in[i] + key[i % key_length]) % 256;
     }
     sequentialTime.stop();
 
@@ -99,8 +98,7 @@ int DecryptSeq(int n, char *data_in, char *data_out, int key_length, int *key)
     sequentialTime.start();
     for (i = 0; i < n; i++)
     {
-
-        // YOUR CODE HERE
+        data_out[i] = (data_in[i] - key[i % key_length] + 256) % 256;
     }
     sequentialTime.stop();
 
