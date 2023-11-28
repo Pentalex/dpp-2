@@ -68,8 +68,7 @@ int EncryptSeq(int n, char *data_in, char *data_out, int key_length, int *key)
     sequentialTime.start();
     for (i = 0; i < n; i++)
     {
-
-        // YOUR CODE HERE
+        data_out[i] = (data_in[i] + key[0]) % 256; // 256 is the ASCII range
     }
     sequentialTime.stop();
 
@@ -91,8 +90,7 @@ int DecryptSeq(int n, char *data_in, char *data_out, int key_length, int *key)
     sequentialTime.start();
     for (i = 0; i < n; i++)
     {
-
-        // YOUR CODE HERE
+        data_out[i] = (data_in[i] - key[0] + 256) % 256; // 256 is the ASCII range
     }
     sequentialTime.stop();
 
