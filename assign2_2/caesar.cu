@@ -45,7 +45,7 @@ __device__ bool isAlphabetical(char c)
 
 /* Change this kernel to properly encrypt the given data. The result should be
  * written to the given out data. */
-__global__ void encryptKernel(char *deviceDataIn, char *deviceDataOut, int key)
+__global__ void encryptKernel(char *deviceDataIn, char *deviceDataOut, int key, int n)
 {
     int tid = blockIdx.x * blockDim.x + threadIdx.x;
 
@@ -66,7 +66,7 @@ __global__ void encryptKernel(char *deviceDataIn, char *deviceDataOut, int key)
 
 /* Change this kernel to properly decrypt the given data. The result should be
  * written to the given out data. */
-__global__ void decryptKernel(char *deviceDataIn, char *deviceDataOut, int key)
+__global__ void decryptKernel(char *deviceDataIn, char *deviceDataOut, int key, int n)
 {
     int tid = blockIdx.x * blockDim.x + threadIdx.x;
 
@@ -162,7 +162,7 @@ int EncryptCuda(int n, char *data_in, char *data_out, int key_length, int *key)
 
     // execute kernel
     kernelTime1.start();
-    encryptKernel<<<n / threadBlockSize, threadBlockSize>>>(deviceDataIn, deviceDataOut, *key);
+    encryptKernel<<<n / threadBlockSize, threadBlockSize>>>(deviceDataIn, deviceDataOut, *key, n);
     cudaDeviceSynchronize();
     kernelTime1.stop();
 
@@ -217,7 +217,7 @@ int DecryptCuda(int n, char *data_in, char *data_out, int key_length, int *key)
 
     // execute kernel
     kernelTime1.start();
-    decryptKernel<<<n / threadBlockSize, threadBlockSize>>>(deviceDataIn, deviceDataOut, *key);
+    decryptKernel<<<n / threadBlockSize, threadBlockSize>>>(deviceDataIn, deviceDataOut, *key, n);
     cudaDeviceSynchronize();
     kernelTime1.stop();
 
