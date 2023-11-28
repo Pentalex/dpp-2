@@ -55,13 +55,13 @@ __global__ void checksumKernel(unsigned int *result, unsigned int *deviceDataIn,
 unsigned int checksumSeq(int n, unsigned int *data_in)
 {
     int i;
-    int sum;
+    unsigned int sum;
     timer sequentialTime = timer("Sequential checksum");
 
     sequentialTime.start();
     for (i = 0; i < n; i++)
     {
-        sum += (int)data_in[i];
+        sum += data_in[i];
     }
     sequentialTime.stop();
 
