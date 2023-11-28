@@ -130,6 +130,10 @@ int EncryptCuda(int n, char *data_in, char *data_out, int key_length, int *key)
     timer kernelTime1 = timer("kernelTime");
     timer memoryTime = timer("memoryTime");
 
+    int *deviceKey = NULL;
+    checkCudaCall(cudaMalloc((void **)&deviceKey, key_length * sizeof(int)));
+    checkCudaCall(cudaMemcpy(deviceKey, key, key_length * sizeof(int), cudaMemcpyHostToDevice));
+
     // copy the original vectors to the GPU
     memoryTime.start();
     checkCudaCall(cudaMemcpy(deviceDataIn, data_in, n * sizeof(char), cudaMemcpyHostToDevice));
@@ -137,7 +141,7 @@ int EncryptCuda(int n, char *data_in, char *data_out, int key_length, int *key)
 
     // execute kernel
     kernelTime1.start();
-    encryptKernel<<<n / threadBlockSize, threadBlockSize>>>(n, deviceDataIn, deviceDataOut, key_length, key);
+    encryptKernel<<<n / threadBlockSize, threadBlockSize>>>(n, deviceDataIn, deviceDataOut, key_length, deviceKey);
     cudaDeviceSynchronize();
     kernelTime1.stop();
 
@@ -151,6 +155,7 @@ int EncryptCuda(int n, char *data_in, char *data_out, int key_length, int *key)
 
     checkCudaCall(cudaFree(deviceDataIn));
     checkCudaCall(cudaFree(deviceDataOut));
+    checkCudaCall(cudaFree(deviceKey));
 
     cout << fixed << setprecision(6);
     cout << "Encrypt (kernel): \t\t" << kernelTime1.getElapsed() << " seconds." << endl;
@@ -185,6 +190,10 @@ int DecryptCuda(int n, char *data_in, char *data_out, int key_length, int *key)
     timer kernelTime1 = timer("kernelTime");
     timer memoryTime = timer("memoryTime");
 
+    int *deviceKey = NULL;
+    checkCudaCall(cudaMalloc((void **)&deviceKey, key_length * sizeof(int)));
+    checkCudaCall(cudaMemcpy(deviceKey, key, key_length * sizeof(int), cudaMemcpyHostToDevice));
+
     // copy the original vectors to the GPU
     memoryTime.start();
     checkCudaCall(cudaMemcpy(deviceDataIn, data_in, n * sizeof(char), cudaMemcpyHostToDevice));
@@ -192,7 +201,7 @@ int DecryptCuda(int n, char *data_in, char *data_out, int key_length, int *key)
 
     // execute kernel
     kernelTime1.start();
-    decryptKernel<<<n / threadBlockSize, threadBlockSize>>>(n, deviceDataIn, deviceDataOut, key_length, key);
+    decryptKernel<<<n / threadBlockSize, threadBlockSize>>>(n, deviceDataIn, deviceDataOut, key_length, deviceKey);
     cudaDeviceSynchronize();
     kernelTime1.stop();
 
@@ -206,6 +215,7 @@ int DecryptCuda(int n, char *data_in, char *data_out, int key_length, int *key)
 
     checkCudaCall(cudaFree(deviceDataIn));
     checkCudaCall(cudaFree(deviceDataOut));
+    checkCudaCall(cudaFree(deviceKey));
 
     cout << fixed << setprecision(6);
     cout << "Decrypt (kernel): \t\t" << kernelTime1.getElapsed() << " seconds." << endl;
