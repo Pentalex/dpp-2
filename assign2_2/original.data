@@ -187,3 +187,28 @@ int main(int argc, char* argv[]) {
     
     return 0;
 }
+
+int main(int argc, char* argv[]) {
+    int n;;
+
+    n = fileSize();
+    if (n == -1) {
+	cout << "File not found! Exiting ... " << endl; 
+	exit(0);
+    }
+
+    char* data_in = new char[n];
+    char* data_out = new char[n];    
+    readData("original.data", data_in); 
+
+    cout << "Encrypting a file of " << n << " characters." << endl;
+
+    EncryptSeq(n, data_in, data_out);
+    writeData(n, "sequential.data", data_out);
+    EncryptCuda(n, data_in, data_out);
+    writeData(n, "cuda.data", data_out);  
+    delete[] data_in;
+    delete[] data_out;
+    
+    return 0;
+}
