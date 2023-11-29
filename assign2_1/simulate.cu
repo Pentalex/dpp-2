@@ -28,8 +28,6 @@ __global__ void waveEquationKernel(const long i_max, double *old_array, double *
                         0.15 * (old_array[i - 1] - 2 * current_array[i] + old_array[i + 1]);
     }
 
-    __syncthreads();
-
     // Swap arrays for the next time step
     if (i > 0 && i < i_max - 1)
     {
