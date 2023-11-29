@@ -105,7 +105,9 @@ double *simulate(const long i_max, const long t_max, const long block_size,
     for (long t = 0; t < t_max; ++t)
     {
         // Launch the kernel to compute the wave equation
-        waveEquationKernel<<<gridDim, blockDim>>>(i_max, d_old_array, d_current_array, d_next_array);
+        size_t shared_size = 2 * block_size * sizeof(double);
+
+        waveEquationKernel<<<gridDim, blockDim, shared_size>>>(i_max, d_old_array, d_current_array, d_next_array);
 
         // Check for CUDA errors after launching the kernel
         checkCudaCall(cudaGetLastError());
