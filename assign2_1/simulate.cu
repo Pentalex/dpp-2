@@ -17,23 +17,15 @@
 using namespace std;
 
 // Function to simulate the wave equation using CUDA
-__global__ void waveEquationKernel(const long i_max, double *old_array, double *current_array, double *next_array)
+__global__ void waveEquationKernel(const long i_max, const double *old_array, const double *current_array, double *next_array)
 {
     extern __shared__ double shared_data[];
 
     long i = blockIdx.x * blockDim.x + threadIdx.x;
 
     // Load data into shared memory with boundary checks
-    if (i > 0 && i < i_max - 1)
-    {
-        shared_data[threadIdx.x] = current_array[i];
-        shared_data[blockDim.x + threadIdx.x] = old_array[i];
-    }
-    else
-    {
-        shared_data[threadIdx.x] = 0.0;
-        shared_data[blockDim.x + threadIdx.x] = 0.0;
-    }
+    shared_data[threadIdx.x] = (i > 0 && i < i_max - 1) ? current_array[i] : 0.0;
+    shared_data[blockDim.x + threadIdx.x] = (i > 0 && i < i_max - 1) ? old_array[i] : 0.0;
 
     __syncthreads();
 
@@ -52,7 +44,6 @@ __global__ void waveEquationKernel(const long i_max, double *old_array, double *
         current_array[i] = shared_data[threadIdx.x];
     }
 }
-
 /* Utility function, use to do error checking for CUDA calls
  *
  * Use this function like this:
