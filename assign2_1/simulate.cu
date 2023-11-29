@@ -52,7 +52,6 @@ __global__ void waveEquationKernel(const long i_max, double *old_array, double *
         current_array[globalIdx] = next_array[globalIdx];
     }
 }
-}
 
 /* Utility function, use to do error checking for CUDA calls
  *
