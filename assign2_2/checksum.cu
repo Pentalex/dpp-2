@@ -42,11 +42,29 @@ static void checkCudaCall(cudaError_t result)
  * integer and NOT an array like deviceDataIn. */
 __global__ void checksumKernel(unsigned int *result, unsigned int *deviceDataIn, int n)
 {
+    extern __shared__ unsigned int sdata[];
 
-    int i = blockIdx.x * blockDim.x + threadIdx.x;
-    if (i < n)
+    unsigned int tid = threadIdx.x;
+    unsigned int i = blockIdx.x * blockDim.x + threadIdx.x;
+
+    // Copy data from global memory to shared memory
+    sdata[tid] = (i < n) ? deviceDataIn[i] : 0;
+    __syncthreads();
+
+    // Perform parallel reduction
+    for (unsigned int s = blockDim.x / 2; s > 0; s >>= 1)
     {
-        atomicAdd(result, deviceDataIn[i]);
+        if (tid < s)
+        {
+            sdata[tid] += sdata[tid + s];
+        }
+        __syncthreads();
+    }
+
+    // Write the result back to global memory
+    if (tid == 0)
+    {
+        atomicAdd(result, sdata[0]);
     }
 }
 
@@ -105,7 +123,7 @@ unsigned int checksumCuda(int n, unsigned int *data_in)
     memoryTime.stop();
 
     kernelTime.start();
-    checksumKernel<<<n / threadBlockSize, threadBlockSize>>>(deviceResult, deviceDataIn, n);
+    checksumKernel<<<(n + threadBlockSize - 1) / threadBlockSize, threadBlockSize, threadBlockSize * sizeof(unsigned int)>>>(deviceResult, deviceDataIn, n);
     cudaDeviceSynchronize();
     kernelTime.stop();
 
