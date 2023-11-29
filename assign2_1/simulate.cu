@@ -17,23 +17,15 @@
 using namespace std;
 
 // Function to simulate the wave equation using CUDA
-__global__ void waveEquationKernel(const long i_max, const double *old_array, const double *current_array, double *next_array)
+__global__ void waveEquationKernel(const long i_max, double *old_array, double *current_array, double *next_array)
 {
-    extern __shared__ double shared_data[];
-
     long i = blockIdx.x * blockDim.x + threadIdx.x;
-
-    // Load data into shared memory with boundary checks
-    shared_data[threadIdx.x] = (i > 0 && i < i_max - 1) ? current_array[i] : 0.0;
-    shared_data[blockDim.x + threadIdx.x] = (i > 0 && i < i_max - 1) ? old_array[i] : 0.0;
-
-    __syncthreads();
 
     // Ensure the thread is within the valid range of indices
     if (i > 0 && i < i_max - 1)
     {
-        next_array[i] = 2.0 * shared_data[threadIdx.x] - shared_data[threadIdx.x + 1] +
-                        0.15 * (shared_data[threadIdx.x - 1] - 2.0 * shared_data[threadIdx.x] + shared_data[threadIdx.x + 1]);
+        next_array[i] = 2 * current_array[i] - old_array[i] +
+                        0.15 * (old_array[i - 1] - 2 * current_array[i] + old_array[i + 1]);
     }
 
     __syncthreads();
@@ -41,9 +33,11 @@ __global__ void waveEquationKernel(const long i_max, const double *old_array, co
     // Swap arrays for the next time step
     if (i > 0 && i < i_max - 1)
     {
-        current_array[i] = shared_data[threadIdx.x];
+        old_array[i] = current_array[i];
+        current_array[i] = next_array[i];
     }
 }
+
 /* Utility function, use to do error checking for CUDA calls
  *
  * Use this function like this:
@@ -93,16 +87,19 @@ double *simulate(const long i_max, const long t_max, const long block_size,
     dim3 blockDim(block_size, 1, 1);
 
     // Iterate over time steps
+    // Iterate over time steps
     for (long t = 0; t < t_max; ++t)
     {
         // Launch the kernel to compute the wave equation
-        size_t shared_size = 2 * block_size * sizeof(double);
-
-        waveEquationKernel<<<gridDim, blockDim, shared_size>>>(i_max, d_old_array, d_current_array, d_next_array);
+        waveEquationKernel<<<gridDim, blockDim>>>(i_max, d_old_array, d_current_array, d_next_array);
 
         // Check for CUDA errors after launching the kernel
         checkCudaCall(cudaGetLastError());
         checkCudaCall(cudaDeviceSynchronize());
+
+        // Swap pointers between current and next arrays
+        std::swap(d_old_array, d_current_array);
+        std::swap(d_current_array, d_next_array);
     }
 
     // Copy the final result back from GPU to CPU
