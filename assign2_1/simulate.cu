@@ -96,10 +96,6 @@ double *simulate(const long i_max, const long t_max, const long block_size,
         // Check for CUDA errors after launching the kernel
         checkCudaCall(cudaGetLastError());
         checkCudaCall(cudaDeviceSynchronize());
-
-        // Swap pointers between current and next arrays
-        std::swap(d_old_array, d_current_array);
-        std::swap(d_current_array, d_next_array);
     }
 
     // Copy the final result back from GPU to CPU
