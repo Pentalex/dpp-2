@@ -19,26 +19,39 @@ using namespace std;
 // Function to simulate the wave equation using CUDA
 __global__ void waveEquationKernel(const long i_max, double *old_array, double *current_array, double *next_array)
 {
-    // Calculate the index for the current thread
+    extern __shared__ double shared_array[];
+
     long i = blockIdx.x * blockDim.x + threadIdx.x;
+    long globalIdx = i + blockIdx.x * (blockDim.x - 2);
+
+    // Load data into shared memory
+    shared_array[threadIdx.x] = current_array[i];
+    if (threadIdx.x == 0 && i > 0)
+    {
+        shared_array[threadIdx.x - 1] = current_array[i - 1];
+    }
+    if (threadIdx.x == blockDim.x - 1 && i < i_max - 1)
+    {
+        shared_array[threadIdx.x + 1] = current_array[i + 1];
+    }
+    __syncthreads();
 
     // Ensure the thread is within the valid range of indices
-    if (i > 0 && i < i_max - 1)
+    if (globalIdx > 0 && globalIdx < i_max - 1)
     {
-        // Compute the new wave amplitude using the given wave equation
-        next_array[i] = 2 * current_array[i] - old_array[i] +
-                        0.15 * (old_array[i - 1] - 2 * current_array[i] + old_array[i + 1]);
+        next_array[globalIdx] = 2 * shared_array[threadIdx.x] - old_array[globalIdx] +
+                                0.15 * (shared_array[threadIdx.x - 1] - 2 * shared_array[threadIdx.x] + shared_array[threadIdx.x + 1]);
     }
 
-    // Synchronize threads to ensure all computations are done before moving to the next time step
     __syncthreads();
 
     // Swap arrays for the next time step
-    if (i > 0 && i < i_max - 1)
+    if (globalIdx > 0 && globalIdx < i_max - 1)
     {
-        old_array[i] = current_array[i];
-        current_array[i] = next_array[i];
+        old_array[globalIdx] = shared_array[threadIdx.x];
+        current_array[globalIdx] = next_array[globalIdx];
     }
+}
 }
 
 /* Utility function, use to do error checking for CUDA calls
