@@ -73,7 +73,7 @@ __global__ void checksumKernel(unsigned int *result, unsigned int *deviceDataIn,
 unsigned int checksumSeq(int n, unsigned int *data_in)
 {
     int i;
-    unsigned int sum;
+    unsigned int sum = 0;
     timer sequentialTime = timer("Sequential checksum");
 
     sequentialTime.start();
